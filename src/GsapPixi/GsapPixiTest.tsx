@@ -4,15 +4,12 @@
 import {useState} from 'react';
 import {AbsoluteFill, useCurrentFrame} from 'remotion';
 import {Sequence} from 'remotion';
+import {Stage, Container} from '@pixi/react';
 import React from 'react';
-import * as PIXI from 'pixi.js';
-import {Container} from '@pixi/react';
 import {continueRender, delayRender} from 'remotion';
-import {map} from 'lodash';
+import {map, filter, isEmpty} from 'lodash';
 import {VideoOnCanvas} from './VideoOnCanvas';
-
-// import {GifOnCanvas} from './GifOnCanvas';
-import Stage from './PixiStage';
+import {GifOnCanvas} from './GifOnCanvas';
 import {ImageSprite} from './PixiImageSprite';
 import PixiCanvasVideoSprite from './PixiCanvasVideoSprite';
 import {CustomTicker} from './useCustomTicker';
@@ -33,7 +30,7 @@ interface Transformation {
 	colorCorrection: Record<string, any>;
 }
 
-interface VideoProps {
+interface SequenceProps {
 	uniqueId: string;
 	src: string;
 	transformation: Transformation;
@@ -45,6 +42,7 @@ interface VideoProps {
 	visible: boolean;
 	mute: boolean;
 	locked: boolean;
+	elementType: string;
 }
 const resolveRedirect = async (video: string) => {
 	const res = await fetch(video, {
@@ -67,20 +65,15 @@ const preload = async (video: string) => {
 export const GsapPixiTest = (props: any) => {
 	console.log('incoming props', props);
 	const {fps, totalDuration} = props;
-	const [data, setData] = useState<VideoProps[]>([]);
-	const elementRefs = React.useRef([]);
+	const [data, setData] = useState<SequenceProps[]>([]);
+	const [isDataReady, setIsDataReady] = useState(false);
 	const spriteHelperRef = React.useRef({frame: 0, fps: 30});
-	const elementGroupRefs = React.useRef([]);
-	const [totalTweens, setTotalTweens] = React.useState(0);
-	const frameRef = React.useRef(0);
 	const videoElementRefs = React.useRef<any>([]);
-	const gifElementRefs = React.useRef([]);
+	const gifElementRefs = React.useRef<any>([]);
 
 	const frame = useCurrentFrame();
 	const [width, height] = [1920, 1080];
 	const [handle] = useState(() => delayRender());
-
-	const backgroundColor = PIXI.utils.string2hex('#2D2E3C');
 
 	React.useEffect(() => {
 		spriteHelperRef.current = {
@@ -90,6 +83,62 @@ export const GsapPixiTest = (props: any) => {
 	}, [frame, fps]);
 
 	React.useEffect(() => {
+		/// https://media.giphy.com/media/3o72F7YT6s0EMFI0Za/giphy.gif
+		const gifSequenceProps = [
+			{
+				uniqueId: 'pixiGif', // UniqueId of the sprite
+				src: 'https://media.giphy.com/media/5VKbvrjxpVJCM/giphy.gif',
+				locked: false,
+				loop: false,
+				applyTransformer: false,
+				startAt: 0,
+				endAt: 5,
+				frameStartAt: 0,
+				frameEndAt: 5,
+				elementType: 'gif',
+				transformation: {
+					x: 400,
+					y: 500,
+					width: 800,
+					height: 800,
+					anchor: 0.5,
+					rotation: 0,
+					alpha: 1,
+					scale: 1,
+					tint: 0xffffff,
+					blendMode: 0,
+					colorCorrection: {},
+				},
+				visible: true,
+			},
+			{
+				uniqueId: 'remotionGif', // UniqueId of the sprite
+				src: 'https://media.giphy.com/media/3o72F7YT6s0EMFI0Za/giphy.gif',
+				locked: false,
+				loop: false,
+				elementType: 'gif',
+				applyTransformer: false,
+				startAt: 5,
+				endAt: 10,
+				frameStartAt: 0,
+				frameEndAt: 5,
+				transformation: {
+					x: 900,
+					y: 500,
+					width: 800,
+					height: 800,
+					anchor: 0.5,
+					rotation: 0,
+					alpha: 1,
+					scale: 1,
+					tint: 0xffffff,
+					blendMode: 0,
+					colorCorrection: {},
+				},
+				visible: true,
+			},
+		];
+
 		const allVids = map(allVideoSource, (vid) => resolveRedirect(vid));
 		Promise.all([allVids])
 			.then((vids) => {
@@ -102,9 +151,10 @@ export const GsapPixiTest = (props: any) => {
 					const videoProps = {
 						uniqueId: videoUniqueId, // UniqueId of the sprite
 						src,
+						elementType: 'video',
 						transformation: {
-							x: 590,
-							y: 150,
+							x: 10 + index * 150,
+							y: 10 + index * 150,
 							width: 550,
 							height: 400,
 							anchor: 0.5,
@@ -126,115 +176,122 @@ export const GsapPixiTest = (props: any) => {
 					};
 					return videoProps;
 				});
-				setData(sequencesVideoProps);
+				const allData = [...sequencesVideoProps, ...gifSequenceProps];
+				const updatedData = allData.map((item) => ({
+					...item,
+					mute: false,
+				}));
+				setData(updatedData);
+				setIsDataReady(true);
 				continueRender(handle);
 			});
 	}, []);
 
-	const gifProps = {
-		uniqueId: 'suryaGify001', // UniqueId of the sprite
-		src: 'https://media.giphy.com/media/5VKbvrjxpVJCM/giphy.gif',
-		locked: false,
-		loop: false,
-		applyTransformer: false,
-		startAt: 2,
-		endAt: 5,
-		frameStartAt: 0,
-		frameEndAt: 3,
-		transformation: {
-			x: 900,
-			y: 500,
-			width: 800,
-			height: 800,
-			anchor: 0.5,
-			rotation: 0,
-			alpha: 1,
-			scale: 1,
-			tint: 0xffffff,
-			blendMode: 0,
-			colorCorrection: {},
-		},
-		visible: true,
-	};
-
 	return (
-		<Sequence>
-			<AbsoluteFill style={{opacity: 0.1, zIndex: -999}}>
-				{map(data, (videoProps) => (
-					<Sequence
-						key={`video-${videoProps.uniqueId}`}
-						from={videoProps.startAt * fps}
-						durationInFrames={videoProps.endAt * fps}
-						name={`video-${videoProps.uniqueId}`}
-						premountFor={30}
+		<>
+			{isDataReady && !isEmpty(data) && (
+				<Sequence>
+					<AbsoluteFill style={{opacity: 0.01, zIndex: -999}}>
+						{map(
+							filter(data, (f) => f.elementType === 'video'),
+							(seqProps) => (
+								<Sequence
+									key={`video-${seqProps.uniqueId}`}
+									from={seqProps.startAt * fps}
+									durationInFrames={seqProps.endAt * fps}
+									name={`video-${seqProps.uniqueId}`}
+									premountFor={30}
+								>
+									<VideoOnCanvas
+										ref={(vref: any) => {
+											videoElementRefs.current[seqProps.uniqueId] = vref;
+										}}
+										width={seqProps.transformation.width}
+										height={seqProps.transformation.height}
+										startFrom={seqProps.frameStartAt * fps}
+										durationInFrames={seqProps.frameEndAt * fps}
+										src={seqProps.src}
+										dataId={seqProps.uniqueId}
+									/>
+								</Sequence>
+							)
+						)}
+					</AbsoluteFill>
+					<AbsoluteFill style={{opacity: 0.01, zIndex: -999}}>
+						{map(
+							filter(data, (f) => f.elementType === 'gif'),
+							(seqProps) => (
+								<Sequence
+									key={`gif-${seqProps.uniqueId}`}
+									from={seqProps.startAt * fps}
+									durationInFrames={seqProps.endAt * fps}
+									name={`gif-${seqProps.uniqueId}`}
+									premountFor={30}
+								>
+									<GifOnCanvas
+										ref={(vref: any) => {
+											gifElementRefs.current[seqProps.uniqueId] = vref;
+										}}
+										width={seqProps.transformation.width}
+										height={seqProps.transformation.height}
+										startFrom={seqProps.frameStartAt * fps}
+										durationInFrames={seqProps.frameEndAt * fps}
+										dataId={seqProps.uniqueId}
+										src={seqProps.src}
+									/>
+								</Sequence>
+							)
+						)}
+					</AbsoluteFill>
+					<Stage
+						width={width}
+						height={height}
+						options={{
+							autoDensity: true,
+							backgroundColor: 0x01262a,
+							antialias: true,
+							resolution: window.devicePixelRatio || 1,
+							powerPreference: 'high-performance',
+							forceCanvas: false, // Set to true if you want to force Canvas renderer
+						}}
+						id="stage"
 					>
-						<VideoOnCanvas
-							ref={(vref: any) => {
-								videoElementRefs.current[videoProps.uniqueId] = vref;
-							}}
-							width={videoProps.transformation.width}
-							height={videoProps.transformation.height}
-							startFrom={videoProps.frameStartAt * fps}
-							durationInFrames={videoProps.frameEndAt * fps}
-							crossOrigin="anonymous"
-							src={videoProps.src}
-						/>
-					</Sequence>
-				))}
-			</AbsoluteFill>
-			<Stage
-				width={width}
-				height={height}
-				options={{backgroundColor}}
-				id="stage"
-			>
-				<Container sortableChildren>
-					<CustomTicker targetFPS={fps} />
-					{/* @ts-ignore */}
-					{/* <PixiSequence
-							startAt={videoProps.startAt}
-							endAt={videoProps.endAt}
-							uniqueId="xydedsddss"
-						>
-							<PixiVideoCanvasSyncSprite
-								ref={(vref: any) => {
-									elementRefs.current[videoUniqueId] = vref;
-								}}
-								{...videoProps}
-								canvasImageRef={videoElementRefs.current[videoUniqueId]}
+						<Container sortableChildren>
+							<CustomTicker targetFPS={fps} />
+							<ImageSprite
+								startAt={0}
+								endAt={5}
+								x={100}
+								y={100}
+								src="http://i.imgur.com/wehQ1GV.jpg"
 							/>
-						</PixiSequence> */}
-
-					<ImageSprite
-						startAt={0}
-						endAt={5}
-						x={100}
-						y={100}
-						src="http://i.imgur.com/wehQ1GV.jpg"
-					/>
-					{map(data, (videoProps) => (
-						<SequenceWrapper
-							key={`video-${videoProps.uniqueId}`}
-							startAt={videoProps.startAt * fps}
-							endAt={videoProps.endAt * fps}
-							spriteHelperRef={spriteHelperRef}
-						>
-							<PixiCanvasVideoSprite
-								{...videoProps}
-								canvasImageRef={videoElementRefs.current[videoProps.uniqueId]}
-							/>
-						</SequenceWrapper>
-					))}
-					{/* <PixiSequence
-							startAt={gifProps.startAt}
-							endAt={gifProps.endAt}
-							uniqueId="xydedsddss"
-						>
-							<PixiGifSprite {...gifProps} />
-						</PixiSequence> */}
-					{/* @ts-ignore */}
-				</Container>
-			</Stage>
-		</Sequence>
+							{map(data, (seqProps) => (
+								<SequenceWrapper
+									key={`video-${seqProps.uniqueId}`}
+									startAt={seqProps.startAt * fps}
+									endAt={seqProps.endAt * fps}
+									spriteHelperRef={spriteHelperRef}
+								>
+									{seqProps.elementType === 'video' && (
+										<PixiCanvasVideoSprite
+											{...seqProps}
+											canvasImageRef={
+												videoElementRefs.current[seqProps.uniqueId]
+											}
+										/>
+									)}
+									{seqProps.elementType === 'gif' && (
+										<PixiCanvasVideoSprite
+											{...seqProps}
+											canvasImageRef={gifElementRefs.current[seqProps.uniqueId]}
+										/>
+									)}
+								</SequenceWrapper>
+							))}
+						</Container>
+					</Stage>
+				</Sequence>
+			)}
+		</>
 	);
 };

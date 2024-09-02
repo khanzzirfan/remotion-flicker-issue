@@ -1,6 +1,6 @@
 /* eslint-disable react/forbid-prop-types */
-import React, {useEffect, useRef, useState} from 'react';
-import {Container, useTick, useApp, Sprite} from '@pixi/react';
+import React, {useRef} from 'react';
+import {Container, useTick} from '@pixi/react';
 import inRange from 'lodash/inRange';
 import * as PIXI from 'pixi.js';
 

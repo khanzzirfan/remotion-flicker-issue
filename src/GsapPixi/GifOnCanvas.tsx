@@ -4,15 +4,22 @@ import {useCallback} from 'react';
 import React, {useImperativeHandle} from 'react';
 import {Gif} from '@remotion/gif';
 
-// @ts-ignore
-export const GifOnCanvas = React.forwardRef((props, ref) => {
-	// @ts-ignore
-	const {height, width, src, dataId = ''} = props;
+export interface GifOnCanvasProps {
+	height: number;
+	width: number;
+	src: string;
+	startFrom: number;
+	durationInFrames: number;
+	dataId: string;
+}
+
+export const GifOnCanvas = React.forwardRef((props: GifOnCanvasProps, ref) => {
+	const {height, width, src, dataId = '', startFrom, durationInFrames} = props;
 	const videoRef = React.useRef(null);
 	const rafRef = React.useRef<any>();
 	const canvasRef = React.useRef(null);
 
-	console.log('incoming props', props);
+	console.log('incoming props', props, startFrom, durationInFrames);
 
 	useImperativeHandle(
 		ref,
@@ -37,9 +44,6 @@ export const GifOnCanvas = React.forwardRef((props, ref) => {
 		if (!context) {
 			return;
 		}
-
-		// Context.filter = 'grayscale(100%)';
-		// context.putImageData(videoRef.current, 0, 0);
 		context.drawImage(videoRef.current, 0, 0, width, height);
 	}, []);
 

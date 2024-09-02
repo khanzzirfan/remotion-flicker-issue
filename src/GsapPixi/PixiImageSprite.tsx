@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
-import {Sprite, Container, useApp, withPixiApp} from '@pixi/react';
+import {Sprite, Container} from '@pixi/react';
 
 export const ImageSprite = (props: any) => {
 	const {startAt, endAt, src, x, y} = props;
