@@ -58,6 +58,7 @@ export const VideoOnCanvas = React.forwardRef(
 					data-id={dataId}
 					id={dataId}
 					onVideoFrame={onVideoFrameOffThread}
+					style={{opacity: 0, pointerEvents: 'none'}}
 					// Hide the original video tag
 				/>
 
