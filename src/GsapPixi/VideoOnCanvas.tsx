@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
+import {Video} from 'remotion';
 import React, {useEffect, useImperativeHandle, useCallback} from 'react';
 import {AbsoluteFill, OffthreadVideo} from 'remotion';
 
@@ -14,7 +15,6 @@ export interface VideoOnCanvasProps {
 export const VideoOnCanvas = React.forwardRef(
 	(props: VideoOnCanvasProps, ref) => {
 		const {height, width, startFrom, durationInFrames, src, dataId} = props;
-		const videoRef = React.useRef(null);
 		const canvasRef = React.useRef(null);
 		useImperativeHandle(
 			ref,
@@ -29,81 +29,37 @@ export const VideoOnCanvas = React.forwardRef(
 			[]
 		);
 
-		/** Video frame transformation */
-		// Process a frame
-		const onVideoFrame = useCallback(() => {
-			if (!canvasRef.current || !videoRef.current) {
-				return;
-			}
-			// @ts-ignore
-			const context = canvasRef.current.getContext('2d');
-			if (!context) {
-				return;
-			}
-			// Context.filter = 'grayscale(100%)';
-			context.drawImage(videoRef.current, 0, 0, width, height);
-		}, [height, width]);
-
-		// Synchronize the video with the canvas
-		useEffect(() => {
-			const {current} = videoRef;
-			// @ts-ignore
-			if (!current?.requestVideoFrameCallback) {
-				return;
-			}
-			let handle = 0;
-			const callback = () => {
-				onVideoFrame();
-				// @ts-ignore
-				handle = current.requestVideoFrameCallback(callback);
-			};
-			callback();
-			return () => {
-				// @ts-ignore
-				current.cancelVideoFrameCallback(handle);
-			};
-		}, [onVideoFrame]);
-
 		const onVideoFrameOffThread = useCallback(
-			(frame: any) => {
+			(frame: CanvasImageSource) => {
 				if (!canvasRef.current) {
 					return;
 				}
+				console.log('frame');
 				// @ts-ignore
 				const context = canvasRef.current?.getContext('2d');
 				if (!context) {
 					return;
 				}
-				context.drawImage(frame, 0, 0, width, height);
+
+				const fr = frame as HTMLVideoElement;
+				console.log({fr: fr.videoHeight, fw: fr.videoWidth});
+
+				context.drawImage(fr, 0, 0, width, height);
 			},
 			[height, width]
 		);
+		console.log('hi', src);
 
 		return (
 			<AbsoluteFill>
-				{/* <Video
-				ref={videoRef}
-				// Hide the original video tag
-				style={{opacity: 0}}
-				startFrom={startFrom}
-				endAt={durationInFrames}
-				src={src}
-				crossOrigin="anonymous"
-				data-id={dataId}
-				id={dataId}
-				width={width}
-				height={height}
-			/> */}
-
-				<OffthreadVideo
-					style={{opacity: 0}}
+				<Video
 					startFrom={startFrom}
 					endAt={durationInFrames}
 					src={src}
-					crossOrigin="anonymous"
 					data-id={dataId}
 					id={dataId}
 					onVideoFrame={onVideoFrameOffThread}
+					// Hide the original video tag
 				/>
 
 				<AbsoluteFill style={{opacity: 1}}>
