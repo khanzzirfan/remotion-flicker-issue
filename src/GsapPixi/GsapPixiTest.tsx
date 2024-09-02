@@ -191,7 +191,7 @@ export const GsapPixiTest = (props: any) => {
 		<>
 			{isDataReady && !isEmpty(data) && (
 				<Sequence>
-					<AbsoluteFill style={{opacity: 0.01, zIndex: -999}}>
+					<AbsoluteFill style={{opacity: 1, zIndex: -999}}>
 						{map(
 							filter(data, (f) => f.elementType === 'video'),
 							(seqProps) => (
@@ -217,79 +217,6 @@ export const GsapPixiTest = (props: any) => {
 							)
 						)}
 					</AbsoluteFill>
-					<AbsoluteFill style={{opacity: 0.01, zIndex: -999}}>
-						{map(
-							filter(data, (f) => f.elementType === 'gif'),
-							(seqProps) => (
-								<Sequence
-									key={`gif-${seqProps.uniqueId}`}
-									from={seqProps.startAt * fps}
-									durationInFrames={seqProps.endAt * fps}
-									name={`gif-${seqProps.uniqueId}`}
-									premountFor={30}
-								>
-									<GifOnCanvas
-										ref={(vref: any) => {
-											gifElementRefs.current[seqProps.uniqueId] = vref;
-										}}
-										width={seqProps.transformation.width}
-										height={seqProps.transformation.height}
-										startFrom={seqProps.frameStartAt * fps}
-										durationInFrames={seqProps.frameEndAt * fps}
-										dataId={seqProps.uniqueId}
-										src={seqProps.src}
-									/>
-								</Sequence>
-							)
-						)}
-					</AbsoluteFill>
-					<Stage
-						width={width}
-						height={height}
-						options={{
-							autoDensity: true,
-							backgroundColor: 0x01262a,
-							antialias: true,
-							resolution: window.devicePixelRatio || 1,
-							powerPreference: 'high-performance',
-							forceCanvas: false, // Set to true if you want to force Canvas renderer
-						}}
-						id="stage"
-					>
-						<Container sortableChildren>
-							<CustomTicker targetFPS={fps} />
-							<ImageSprite
-								startAt={0}
-								endAt={5}
-								x={100}
-								y={100}
-								src="http://i.imgur.com/wehQ1GV.jpg"
-							/>
-							{map(data, (seqProps) => (
-								<SequenceWrapper
-									key={`video-${seqProps.uniqueId}`}
-									startAt={seqProps.startAt * fps}
-									endAt={seqProps.endAt * fps}
-									spriteHelperRef={spriteHelperRef}
-								>
-									{seqProps.elementType === 'video' && (
-										<PixiCanvasVideoSprite
-											{...seqProps}
-											canvasImageRef={
-												videoElementRefs.current[seqProps.uniqueId]
-											}
-										/>
-									)}
-									{seqProps.elementType === 'gif' && (
-										<PixiCanvasVideoSprite
-											{...seqProps}
-											canvasImageRef={gifElementRefs.current[seqProps.uniqueId]}
-										/>
-									)}
-								</SequenceWrapper>
-							))}
-						</Container>
-					</Stage>
 				</Sequence>
 			)}
 		</>
