@@ -1,5 +1,5 @@
-import React, {useRef, useImperativeHandle} from 'react';
-import {Sprite, Container, useTick, useApp} from '@pixi/react';
+import React from 'react';
+import {Sprite, Container, useTick} from '@pixi/react';
 import * as PIXI from 'pixi.js';
 import isEmpty from 'lodash/isEmpty';
 
@@ -10,7 +10,6 @@ const PixiCanvasVideoSprite = (props: any) => {
 		canvasImageRef,
 	} = props;
 
-	const [updater, setUpdater] = React.useState(0);
 	const videoTextureRef = React.useRef<PIXI.Texture<PIXI.Resource>>();
 	const imageRef = React.useRef<PIXI.Sprite>(null);
 	const containerRef = React.useRef(null);
@@ -42,7 +41,6 @@ const PixiCanvasVideoSprite = (props: any) => {
 					baseTexture.update();
 				}
 			}
-			setUpdater((prev) => prev + 1);
 		}
 	}, [canvasSource]);
 
@@ -64,5 +62,5 @@ const PixiCanvasVideoSprite = (props: any) => {
 };
 
 // memoize component
-const PixiMemoizeCanvasSprite = React.memo(PixiCanvasVideoSprite);
-export default PixiMemoizeCanvasSprite;
+// const PixiMemoizeCanvasSprite = React.memo(PixiCanvasVideoSprite);
+export default PixiCanvasVideoSprite;
