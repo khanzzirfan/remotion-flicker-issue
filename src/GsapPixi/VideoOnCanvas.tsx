@@ -48,7 +48,6 @@ export const VideoOnCanvas = React.forwardRef(
 			},
 			[height, width]
 		);
-		console.log('hi', src);
 
 		return (
 			<AbsoluteFill>
